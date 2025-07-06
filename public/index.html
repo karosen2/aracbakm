@@ -120,16 +120,7 @@
             updateVehicleData();
         });
 
-        // Arama inputu için event listener (onkeyup yerine)
         document.getElementById('searchInput').addEventListener('keyup', filterVehicles);
-
-        // Silme işlemi için event delegation
-        document.getElementById('vehicleList').addEventListener('click', function(e) {
-            if (e.target.classList.contains('btn-danger')) {
-                const index = e.target.getAttribute('data-index');
-                removeVehicle(Number(index));
-            }
-        });
 
         function addVehicle() {
             const vehicleName = document.getElementById('vehicleName').value;
@@ -202,7 +193,7 @@
                         <td>${vehicle.nextInspectionDate}</td>
                         <td>${vehicle.maintenanceDue ? 'Bakım Zamanı Geldi' : 'Bakım Zamanı Gelmedi'}</td>
                         <td>${totalWorkingHours}</td>
-                        <td><button class="btn btn-danger" data-index="${index}">-</button></td>
+                        <td><button class="btn btn-danger" onclick="removeVehicle(${index})">-</button></td>
                     </tr>`;
             });
         }
@@ -215,41 +206,4 @@
                 });
         }
 
-        function updateVehicleSelect() {
-            const vehicleSelect = document.getElementById('vehicleSelect');
-            vehicleSelect.innerHTML = '';
-            vehicles.forEach((vehicle, index) => {
-                vehicleSelect.innerHTML += `<option value="${index}">${vehicle.name}</option>`;
-            });
-        }
-
-        function filterVehicles() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const vehicleSelect = document.getElementById('vehicleSelect');
-            vehicleSelect.innerHTML = '';
-            vehicles.forEach((vehicle, index) => {
-                if (vehicle.name.toLowerCase().includes(searchInput)) {
-                    vehicleSelect.innerHTML += `<option value="${index}">${vehicle.name}</option>`;
-                }
-            });
-        }
-
-        function loadVehicles() {
-            onValue(ref(database, 'vehicles'), (snapshot) => {
-                vehicles.length = 0;
-                snapshot.forEach(childSnapshot => {
-                    const vehicle = childSnapshot.val();
-                    vehicle.id = childSnapshot.key;
-                    vehicle.workingHours = vehicle.workingHours || [];
-                    vehicles.push(vehicle);
-                });
-                updateVehicleList();
-                updateVehicleSelect();
-                document.getElementById('load').style.display = 'none';
-            });
-        }
-
-        loadVehicles();
-    </script>
-</body>
-</html>
+        //
