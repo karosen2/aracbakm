@@ -3,7 +3,7 @@
     "database": "(default)",
     "location": "europe-west1",
     "rules": "firestore.rules",
-    "indexes": "firestor.indexes.json"
+    "indexes": "firestore.indexes.json"
   },
   "hosting": {
     "public": "public",

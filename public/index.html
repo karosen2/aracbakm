@@ -48,22 +48,11 @@
             font-size: 0.9em;
             margin: 0;
         }
-        .warning {
-            color: orange;
-        }
         .danger {
             color: red;
         }
         .btn-danger {
             margin-left: 10px;
-        }
-        #message {
-            background: white; 
-            max-width: 360px; 
-            margin: 20px auto; 
-            padding: 32px 24px; 
-            border-radius: 3px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
         }
         #load { 
             color: rgba(0,0,0,0.4); 
@@ -145,19 +134,13 @@
         </table>
     </div>
 
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
-    </div>
     <p id="load">Firebase SDK Loading&hellip;</p>
 
-    <!-- Firebase SDK'lerini ekleyin -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <!-- Firebase SDK'lerini modül olarak ekleyin -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getDatabase, ref, set, update, onValue, push, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-    <script>
         // Firebase yapılandırma bilgileri
         const firebaseConfig = {
             apiKey: "AIzaSyCWD1_d_dC2gNXUwxD3a2pxAFUCSwZYpdo",
@@ -171,8 +154,8 @@
         };
 
         // Firebase'i başlat
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
         const vehicles = [];
 
@@ -204,20 +187,15 @@
             };
 
             // Firebase'e ekleme
-            const vehicleRef = database.ref('vehicles').push();
+            const vehicleRef = push(ref(database, 'vehicles'));
             const vehicleId = vehicleRef.key; // Benzersiz ID
-            vehicleRef.set({
+            set(vehicleRef, {
                 id: vehicleId,
-                name: vehicleName,
-                currentKm: initialKm,
-                nextMaintenanceKm: nextMaintenanceKm,
-                nextInspectionDate: nextInspectionDate,
-                maintenanceDue: initialKm >= nextMaintenanceKm,
-                workingHours: []
+                ...vehicle
             })
             .then(() => {
                 console.log("Araç başarıyla eklendi.");
-                vehicles.push(vehicle);
+                vehicles.push({ id: vehicleId, ...vehicle });
                 updateVehicleList();
                 updateVehicleSelect();
                 document.getElementById('addVehicleForm').reset();
@@ -243,7 +221,7 @@
             vehicles[vehicleIndex].maintenanceDue = vehicles[vehicleIndex].currentKm >= vehicles[vehicleIndex].nextMaintenanceKm;
 
             // Firebase'e güncelleme yap
-            database.ref('vehicles').child(vehicles[vehicleIndex].id).update({
+            update(ref(database, 'vehicles/' + vehicles[vehicleIndex].id), {
                 currentKm: vehicles[vehicleIndex].currentKm,
                 workingHours: vehicles[vehicleIndex].workingHours,
                 maintenanceDue: vehicles[vehicleIndex].maintenanceDue
@@ -263,7 +241,7 @@
             const vehicleList = document.getElementById('vehicleList');
             vehicleList.innerHTML = '';
             vehicles.forEach((vehicle, index) => {
-                const totalWorkingHours = vehicle.workingHours.reduce((a, b) => a + b, 0);
+                const totalWorkingHours = (vehicle.workingHours || []).reduce((a, b) => a + b, 0);
                 const maintenanceAlert = vehicle.maintenanceDue ? '<span class="danger">Bakım Zamanı Geldi!</span>' : '';
                 
                 vehicleList.innerHTML += `
@@ -281,9 +259,16 @@
         }
 
         function removeVehicle(index) {
-            vehicles.splice(index, 1);
-            updateVehicleList();
-            updateVehicleSelect();
+            const vehicleId = vehicles[index].id;
+            remove(ref(database, 'vehicles/' + vehicleId))
+                .then(() => {
+                    vehicles.splice(index, 1);
+                    updateVehicleList();
+                    updateVehicleSelect();
+                })
+                .catch((error) => {
+                    console.error("Araç silinirken hata oluştu: ", error);
+                });
         }
 
         function updateVehicleSelect() {
@@ -307,11 +292,12 @@
 
         // Sayfa yüklendiğinde verileri yükle
         function loadVehicles() {
-            database.ref('vehicles').on('value', (snapshot) => {
+            onValue(ref(database, 'vehicles'), (snapshot) => {
                 vehicles.length = 0; // Mevcut verileri temizle
                 snapshot.forEach(childSnapshot => {
                     const vehicle = childSnapshot.val();
                     vehicle.id = childSnapshot.key; // Araç ID'sini ekle
+                    vehicle.workingHours = vehicle.workingHours || [];
                     vehicles.push(vehicle);
                 });
                 updateVehicleList();
@@ -320,29 +306,6 @@
         }
 
         loadVehicles(); // Sayfa yüklendiğinde verileri yükle
-
-        // Firebase SDK yükleniyor
-        document.addEventListener('DOMContentLoaded', function() {
-            const loadEl = document.querySelector('#load');
-            try {
-                let app = firebase.app();
-                let features = [
-                    'auth', 
-                    'database', 
-                    'firestore',
-                    'functions',
-                    'messaging', 
-                    'storage', 
-                    'analytics', 
-                    'remoteConfig',
-                    'performance',
-                ].filter(feature => typeof app[feature] === 'function');
-                loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-            } catch (e) {
-                console.error(e);
-                loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
-            }
-        });
     </script>
 </body>
 </html>
