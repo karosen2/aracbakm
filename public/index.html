@@ -50,7 +50,7 @@
         <form id="dailyDataForm">
             <div class="form-group">
                 <label for="searchInput">Araç Ara:</label>
-                <input type="text" class="form-control" id="searchInput" placeholder="Araç adı ile ara" onkeyup="filterVehicles()">
+                <input type="text" class="form-control" id="searchInput" placeholder="Araç adı ile ara">
             </div>
             <div class="form-group">
                 <label for="vehicleSelect">Araç Seç:</label>
@@ -119,6 +119,9 @@
             event.preventDefault();
             updateVehicleData();
         });
+
+        // Arama inputu için event listener (onkeyup yerine)
+        document.getElementById('searchInput').addEventListener('keyup', filterVehicles);
 
         // Silme işlemi için event delegation
         document.getElementById('vehicleList').addEventListener('click', function(e) {
