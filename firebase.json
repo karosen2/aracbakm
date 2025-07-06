@@ -1,0 +1,27 @@
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "europe-west1",
+    "rules": "firestore.rules",
+    "indexes": "firestor.indexes.json"
+  },
+  "hosting": {
+    "site": "arac-kontrol5561",
+    "public": "public",
+    
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "database": {
+    "rules": "database.rules.json"
+  }
+}
