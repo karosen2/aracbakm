@@ -6,9 +6,7 @@
     "indexes": "firestor.indexes.json"
   },
   "hosting": {
-    "site": "arac-kontrol5561",
     "public": "public",
-    
     "ignore": [
       "firebase.json",
       "**/.*",

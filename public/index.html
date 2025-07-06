@@ -161,9 +161,10 @@
         // Firebase yapılandırma bilgileri
         const firebaseConfig = {
             apiKey: "AIzaSyCWD1_d_dC2gNXUwxD3a2pxAFUCSwZYpdo",
+            databaseURL: "https://arac-bakim-3eebc-default-rtdb.europe-west1.firebasedatabase.app/",
             authDomain: "arac-bakim-3eebc.firebaseapp.com",
             projectId: "arac-bakim-3eebc",
-            storageBucket: "arac-bakim-3eebc.firebasestorage.app",
+            storageBucket: "arac-bakim-3eebc.appspot.com",
             messagingSenderId: "909901893213",
             appId: "1:909901893213:web:3dc9e584443b199aaa87b4",
             measurementId: "G-BGZ6X7P7B2"
@@ -203,17 +204,27 @@
             };
 
             // Firebase'e ekleme
-            database.ref('vehicles').push(vehicle)
-                .then(() => {
-                    console.log("Araç başarıyla eklendi.");
-                    vehicles.push(vehicle);
-                    updateVehicleList();
-                    updateVehicleSelect();
-                    document.getElementById('addVehicleForm').reset();
-                })
-                .catch((error) => {
-                    console.error("Araç eklenirken hata oluştu: ", error);
-                });
+            const vehicleRef = database.ref('vehicles').push();
+            const vehicleId = vehicleRef.key; // Benzersiz ID
+            vehicleRef.set({
+                id: vehicleId,
+                name: vehicleName,
+                currentKm: initialKm,
+                nextMaintenanceKm: nextMaintenanceKm,
+                nextInspectionDate: nextInspectionDate,
+                maintenanceDue: initialKm >= nextMaintenanceKm,
+                workingHours: []
+            })
+            .then(() => {
+                console.log("Araç başarıyla eklendi.");
+                vehicles.push(vehicle);
+                updateVehicleList();
+                updateVehicleSelect();
+                document.getElementById('addVehicleForm').reset();
+            })
+            .catch((error) => {
+                console.error("Araç eklenirken hata oluştu: ", error);
+            });
         }
 
         function updateVehicleData() {
@@ -230,8 +241,22 @@
             }
 
             vehicles[vehicleIndex].maintenanceDue = vehicles[vehicleIndex].currentKm >= vehicles[vehicleIndex].nextMaintenanceKm;
-            updateVehicleList();
-            this.reset();
+
+            // Firebase'e güncelleme yap
+            database.ref('vehicles').child(vehicles[vehicleIndex].id).update({
+                currentKm: vehicles[vehicleIndex].currentKm,
+                workingHours: vehicles[vehicleIndex].workingHours,
+                maintenanceDue: vehicles[vehicleIndex].maintenanceDue
+            })
+            .then(() => {
+                console.log("Araç verisi başarıyla güncellendi.");
+                updateVehicleList();
+                updateVehicleSelect();
+                document.getElementById('dailyDataForm').reset();
+            })
+            .catch((error) => {
+                console.error("Araç verisi güncellenirken hata oluştu: ", error);
+            });
         }
 
         function updateVehicleList() {
@@ -285,7 +310,9 @@
             database.ref('vehicles').on('value', (snapshot) => {
                 vehicles.length = 0; // Mevcut verileri temizle
                 snapshot.forEach(childSnapshot => {
-                    vehicles.push(childSnapshot.val());
+                    const vehicle = childSnapshot.val();
+                    vehicle.id = childSnapshot.key; // Araç ID'sini ekle
+                    vehicles.push(vehicle);
                 });
                 updateVehicleList();
                 updateVehicleSelect();
