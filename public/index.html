@@ -6,65 +6,25 @@
     <title>Araç Takip Sistemi</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        body {
-            background-color: #e9ecef;
-            font-family: 'Arial', sans-serif;
-        }
-        .container {
-            margin-top: 20px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        h1, h2 {
-            color: #495057;
-            text-align: center;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border: none;
-        }
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        table {
-            margin-top: 20px;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .form-group label {
-            font-weight: bold;
-        }
-        #searchInput {
-            margin-bottom: 10px;
-        }
-        .alert {
-            font-size: 0.9em;
-            margin: 0;
-        }
-        .danger {
-            color: red;
-        }
-        .btn-danger {
-            margin-left: 10px;
-        }
-        #load { 
-            color: rgba(0,0,0,0.4); 
-            text-align: center; 
-            font-size: 13px; 
-        }
+        body { background-color: #e9ecef; font-family: 'Arial', sans-serif; }
+        .container { margin-top: 20px; background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);}
+        h1, h2 { color: #495057; text-align: center; }
+        .btn-primary { background-color: #007bff; border: none; }
+        .btn-primary:hover { background-color: #0056b3; }
+        table { margin-top: 20px; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        .form-group label { font-weight: bold; }
+        #searchInput { margin-bottom: 10px; }
+        .alert { font-size: 0.9em; margin: 0; }
+        .danger { color: red; }
+        .btn-danger { margin-left: 10px; }
+        #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Araç Takip Sistemi</h1>
-
         <h2>Araç Ekle</h2>
         <form id="addVehicleForm">
             <div class="form-group">
@@ -85,9 +45,7 @@
             </div>
             <button type="submit" class="btn btn-primary">Araç Ekle</button>
         </form>
-
         <hr>
-
         <h2>Günlük Veri Girişi</h2>
         <form id="dailyDataForm">
             <div class="form-group">
@@ -112,9 +70,7 @@
             </div>
             <button type="submit" class="btn btn-primary">Veriyi Kaydet</button>
         </form>
-
         <hr>
-
         <h2>Araç Listesi</h2>
         <table class="table table-striped">
             <thead>
@@ -133,15 +89,11 @@
             </tbody>
         </table>
     </div>
-
     <p id="load">Firebase SDK Loading&hellip;</p>
-
-    <!-- Firebase SDK'lerini modül olarak ekleyin -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getDatabase, ref, set, update, onValue, push, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-        // Firebase yapılandırma bilgileri
         const firebaseConfig = {
             apiKey: "AIzaSyCWD1_d_dC2gNXUwxD3a2pxAFUCSwZYpdo",
             databaseURL: "https://arac-bakim-3eebc-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -153,22 +105,27 @@
             measurementId: "G-BGZ6X7P7B2"
         };
 
-        // Firebase'i başlat
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
         const vehicles = [];
 
-        // Araç ekleme
         document.getElementById('addVehicleForm').addEventListener('submit', function(event) {
             event.preventDefault();
             addVehicle();
         });
 
-        // Günlük veri girişi
         document.getElementById('dailyDataForm').addEventListener('submit', function(event) {
             event.preventDefault();
             updateVehicleData();
+        });
+
+        // Silme işlemi için event delegation
+        document.getElementById('vehicleList').addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-danger')) {
+                const index = e.target.getAttribute('data-index');
+                removeVehicle(Number(index));
+            }
         });
 
         function addVehicle() {
@@ -186,18 +143,13 @@
                 workingHours: []
             };
 
-            // Firebase'e ekleme
             const vehicleRef = push(ref(database, 'vehicles'));
-            const vehicleId = vehicleRef.key; // Benzersiz ID
+            const vehicleId = vehicleRef.key;
             set(vehicleRef, {
                 id: vehicleId,
                 ...vehicle
             })
             .then(() => {
-                console.log("Araç başarıyla eklendi.");
-                vehicles.push({ id: vehicleId, ...vehicle });
-                updateVehicleList();
-                updateVehicleSelect();
                 document.getElementById('addVehicleForm').reset();
             })
             .catch((error) => {
@@ -220,16 +172,12 @@
 
             vehicles[vehicleIndex].maintenanceDue = vehicles[vehicleIndex].currentKm >= vehicles[vehicleIndex].nextMaintenanceKm;
 
-            // Firebase'e güncelleme yap
             update(ref(database, 'vehicles/' + vehicles[vehicleIndex].id), {
                 currentKm: vehicles[vehicleIndex].currentKm,
                 workingHours: vehicles[vehicleIndex].workingHours,
                 maintenanceDue: vehicles[vehicleIndex].maintenanceDue
             })
             .then(() => {
-                console.log("Araç verisi başarıyla güncellendi.");
-                updateVehicleList();
-                updateVehicleSelect();
                 document.getElementById('dailyDataForm').reset();
             })
             .catch((error) => {
@@ -243,29 +191,22 @@
             vehicles.forEach((vehicle, index) => {
                 const totalWorkingHours = (vehicle.workingHours || []).reduce((a, b) => a + b, 0);
                 const maintenanceAlert = vehicle.maintenanceDue ? '<span class="danger">Bakım Zamanı Geldi!</span>' : '';
-                
-                vehicleList.innerHTML += `
-                    <tr>
+                vehicleList.innerHTML +=
+                    `<tr>
                         <td>${vehicle.name} ${maintenanceAlert}</td>
                         <td>${vehicle.currentKm}</td>
                         <td>${vehicle.nextMaintenanceKm}</td>
                         <td>${vehicle.nextInspectionDate}</td>
                         <td>${vehicle.maintenanceDue ? 'Bakım Zamanı Geldi' : 'Bakım Zamanı Gelmedi'}</td>
                         <td>${totalWorkingHours}</td>
-                        <td><button class="btn btn-danger" onclick="removeVehicle(${index})">-</button></td>
-                    </tr>
-                `;
+                        <td><button class="btn btn-danger" data-index="${index}">-</button></td>
+                    </tr>`;
             });
         }
 
         function removeVehicle(index) {
             const vehicleId = vehicles[index].id;
             remove(ref(database, 'vehicles/' + vehicleId))
-                .then(() => {
-                    vehicles.splice(index, 1);
-                    updateVehicleList();
-                    updateVehicleSelect();
-                })
                 .catch((error) => {
                     console.error("Araç silinirken hata oluştu: ", error);
                 });
@@ -290,22 +231,22 @@
             });
         }
 
-        // Sayfa yüklendiğinde verileri yükle
         function loadVehicles() {
             onValue(ref(database, 'vehicles'), (snapshot) => {
-                vehicles.length = 0; // Mevcut verileri temizle
+                vehicles.length = 0;
                 snapshot.forEach(childSnapshot => {
                     const vehicle = childSnapshot.val();
-                    vehicle.id = childSnapshot.key; // Araç ID'sini ekle
+                    vehicle.id = childSnapshot.key;
                     vehicle.workingHours = vehicle.workingHours || [];
                     vehicles.push(vehicle);
                 });
                 updateVehicleList();
                 updateVehicleSelect();
+                document.getElementById('load').style.display = 'none';
             });
         }
 
-        loadVehicles(); // Sayfa yüklendiğinde verileri yükle
+        loadVehicles();
     </script>
 </body>
 </html>
